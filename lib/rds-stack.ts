@@ -1,16 +1,10 @@
 import * as cdk from "aws-cdk-lib";
-import { Construct } from "constructs";
 import * as ec2 from "aws-cdk-lib/aws-ec2";
-import * as rds from "aws-cdk-lib/aws-rds";
-import * as s3 from "aws-cdk-lib/aws-s3";
 import * as kms from "aws-cdk-lib/aws-kms";
-import { ConfigProps } from "./config";
-import { Stack, StackProps } from "aws-cdk-lib";
-import { vpcStack } from "./vpc-stack";
+import * as rds from "aws-cdk-lib/aws-rds";
 import { Secret } from "aws-cdk-lib/aws-secretsmanager";
-type AwsEnvStackProps = StackProps & {
-  config: Readonly<ConfigProps>;
-};
+import { Construct } from "constructs";
+import { ConfigProps } from "./config";
 
 export interface RdsStackProps extends cdk.StackProps {
   config: ConfigProps;
@@ -31,7 +25,7 @@ export class rdsStack extends cdk.Stack {
     const RDS_USER = props.rdsuser;
     const RDS_PASSWORD = props.rdspassword;
     const kmsKey = new kms.Key(this, "RDSKmsKey", {
-      enableKeyRotation: true, // Optional: Enable key rotation
+      enableKeyRotation: true,
     });
 
     const securityGroupRDS = new ec2.SecurityGroup(this, "RdsSecurityGroup", {
@@ -44,12 +38,6 @@ export class rdsStack extends cdk.Stack {
       ec2.Port.tcp(5432),
       "Allow RDS traffic"
     );
-
-    const subnetGroupRDS = new rds.SubnetGroup(this, "RDSSubnetGroup", {
-      description: "Subnet for RDS Aurora",
-      vpc: vpc,
-      vpcSubnets: { subnetType: ec2.SubnetType.PRIVATE_ISOLATED },
-    });
 
     const creds = new Secret(this, "rdsSecret", {
       secretObjectValue: {

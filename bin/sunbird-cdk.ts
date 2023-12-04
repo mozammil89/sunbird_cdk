@@ -1,16 +1,12 @@
 #!/usr/bin/env node
 import * as cdk from "aws-cdk-lib";
-import "source-map-support/register";
-import { sbrcStack } from "../lib/sbrc-stack";
-import { vpcStack } from "../lib/vpc-stack";
-import { rdsStack } from "../lib/rds-stack";
+import { StackProps } from "aws-cdk-lib";
+import { ConfigProps, getConfig } from "../lib/config";
 import { eksStack } from "../lib/eks-stack";
-import { getConfig } from "../lib/config";
-import { ConfigProps } from "../lib/config";
-import { Stack, StackProps } from "aws-cdk-lib";
-import { s3Stack } from "../lib/s3-stack";
 import { helmStack } from "../lib/helm-stack";
-import { testStack } from "../lib/test-stack";
+import { rdsStack } from "../lib/rds-stack";
+import { s3Stack } from "../lib/s3-stack";
+import { vpcStack } from "../lib/vpc-stack";
 
 const config = getConfig();
 
@@ -65,13 +61,4 @@ new helmStack(app, "helmStack", {
   KEYCLOAK_DEFAULT_USER_PASSWORD: config.KEYCLOAK_DEFAULT_USER_PASSWORD,
   RDS_PASSWORD: config.RDS_PASSWORD,
   MINIO_USER: config.MINIO_USER,
-});
-new testStack(app, "testStack", {
-  env: {
-    region: config.REGION,
-    account: config.ACCOUNT,
-  },
-  config: config,
-  rdssecret: rdssecret.rdsSecret,
-  rdsHost: rdssecret.rdsHost,
 });

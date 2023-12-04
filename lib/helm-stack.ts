@@ -1,18 +1,13 @@
 import * as cdk from "aws-cdk-lib";
-import * as helm from "aws-cdk-lib/aws-eks";
-import { Construct } from "constructs";
-import * as eks from "aws-cdk-lib/aws-eks";
 import * as ec2 from "aws-cdk-lib/aws-ec2";
-import { ConfigProps } from "./config";
-import { Secret } from "aws-cdk-lib/aws-secretsmanager";
-import * as s3 from "aws-cdk-lib/aws-s3";
+import * as eks from "aws-cdk-lib/aws-eks";
+import * as helm from "aws-cdk-lib/aws-eks";
 import * as iam from "aws-cdk-lib/aws-iam";
-// import * as childProcess from "child_process";
-// import * as secmanager from "aws-sdk/client-secrets-manager";
-import { exec } from "child_process";
-import * as AWS from "aws-sdk";
+import * as s3 from "aws-cdk-lib/aws-s3";
 import * as sm from "aws-cdk-lib/aws-secretsmanager";
-import { ISecret } from "aws-cdk-lib/aws-secretsmanager";
+import { ISecret, Secret } from "aws-cdk-lib/aws-secretsmanager";
+import { Construct } from "constructs";
+import { ConfigProps } from "./config";
 
 export interface helmStackProps extends cdk.StackProps {
   config: ConfigProps;
@@ -49,13 +44,9 @@ export class helmStack extends cdk.Stack {
     };
     const dbPass = getValueFromSecret(secretName, "password");
 
-    const appSecret = Secret.fromSecretCompleteArn(
-      this,
-      "rdssecret",
-      rdssecretARN
-    );
-    const user = appSecret.secretValueFromJson("username").toString();
     const base64encodedDBpass = cdk.Fn.base64(RDS_PASSWORD);
+    const base64encodedkeycloakAdminPassword = cdk.Fn.base64(KEYCLOAK_ADMIN_PASSWORD);
+    const base64encodedkeycloakUserPassword = cdk.Fn.base64(KEYCLOAK_DEFAULT_USER_PASSWORD);
 
     const useriam = new iam.User(this, "MyUser", {
       userName: MINIO_USER,
@@ -100,11 +91,11 @@ export class helmStack extends cdk.Stack {
           },
           secrets: {
             DB_PASSWORD: base64encodedDBpass,
-            ELASTIC_SEARCH_PASSWORD: "T3BlbnNlYXJjaEAxMjMK",
+            // ELASTIC_SEARCH_PASSWORD: ELASTIC_SEARCH_PASSWORD,
             KEYCLOAK_ADMIN_CLIENT_SECRET: KEYCLOAK_ADMIN_CLIENT_SECRET,
-            KEYCLOAK_ADMIN_PASSWORD: KEYCLOAK_ADMIN_PASSWORD,
+            KEYCLOAK_ADMIN_PASSWORD: base64encodedkeycloakAdminPassword,
+            KEYCLOAK_DEFAULT_USER_PASSWORD: base64encodedkeycloakUserPassword,
             MINIO_SECRET_KEY: encodedSecretKey,
-            KEYCLOAK_DEFAULT_USER_PASSWORD: KEYCLOAK_DEFAULT_USER_PASSWORD,
             access_key: encodedAccessKey,
           },
           minio: {
